@@ -1,24 +1,48 @@
 import { createAnthropic } from '@ai-sdk/anthropic';
+import { createAzure } from '@ai-sdk/azure';
 import type { StreamRequestType } from '@onlook/models/chat';
 import { BASE_PROXY_ROUTE, FUNCTIONS_ROUTE, ProxyRoutes } from '@onlook/models/constants';
-import { CLAUDE_MODELS, LLMProvider } from '@onlook/models/llm';
+import { AZURE_OPENAI_MODELS, CLAUDE_MODELS, LLMProvider } from '@onlook/models/llm';
 import { type LanguageModelV1 } from 'ai';
 import { getRefreshedAuthTokens } from '../auth';
+
 export interface OnlookPayload {
     requestType: StreamRequestType;
 }
 
 export async function initModel(
     provider: LLMProvider,
-    model: CLAUDE_MODELS,
+    model: CLAUDE_MODELS | AZURE_OPENAI_MODELS,
     payload: OnlookPayload,
 ): Promise<LanguageModelV1> {
     switch (provider) {
+        case LLMProvider.AZURE_OPENAI:
+            return await getAzureOpenAIProvider(model as AZURE_OPENAI_MODELS);
         case LLMProvider.ANTHROPIC:
-            return await getAnthropicProvider(model, payload);
+            return await getAnthropicProvider(model as CLAUDE_MODELS, payload);
         default:
             throw new Error(`Unsupported provider: ${provider}`);
     }
+}
+
+async function getAzureOpenAIProvider(model: AZURE_OPENAI_MODELS): Promise<LanguageModelV1> {
+    const apiKey = import.meta.env.VITE_AZURE_OPENAI_API_KEY;
+    const endpoint = import.meta.env.VITE_AZURE_OPENAI_ENDPOINT;
+    const deployment = import.meta.env.VITE_AZURE_OPENAI_DEPLOYMENT;
+
+    if (!apiKey || !endpoint || !deployment) {
+        throw new Error('Azure OpenAI configuration missing');
+    }
+
+    const config = {
+        apiKey,
+        baseURL: endpoint,
+        headers: {
+            'api-key': apiKey,
+        },
+    };
+
+    return createAzure(config)(model, {});
 }
 
 async function getAnthropicProvider(
@@ -26,29 +50,17 @@ async function getAnthropicProvider(
     payload: OnlookPayload,
 ): Promise<LanguageModelV1> {
     const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-    const proxyUrl = `${import.meta.env.VITE_SUPABASE_API_URL}${FUNCTIONS_ROUTE}${BASE_PROXY_ROUTE}${ProxyRoutes.ANTHROPIC}`;
 
-    const config: {
-        apiKey?: string;
-        baseURL?: string;
-        headers?: Record<string, string>;
-    } = {};
-
-    if (apiKey) {
-        config.apiKey = apiKey;
-    } else {
-        const authTokens = await getRefreshedAuthTokens();
-        if (!authTokens) {
-            throw new Error('No auth tokens found');
-        }
-        config.apiKey = '';
-        config.baseURL = proxyUrl;
-        config.headers = {
-            Authorization: `Bearer ${authTokens.accessToken}`,
-            'X-Onlook-Request-Type': payload.requestType,
-            'anthropic-beta': 'output-128k-2025-02-19',
-        };
+    if (!apiKey) {
+        throw new Error('No Anthropic API key found in environment variables');
     }
+
+    const config = {
+        apiKey: apiKey,
+        headers: {
+            'anthropic-beta': 'output-128k-2025-02-19',
+        },
+    };
 
     const anthropic = createAnthropic(config);
     return anthropic(model, {

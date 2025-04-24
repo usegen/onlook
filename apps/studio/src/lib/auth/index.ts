@@ -5,45 +5,29 @@ import { makeAutoObservable } from 'mobx';
 import { invokeMainChannel } from '../utils';
 
 export class AuthManager {
-    authenticated = true; // Set to true for local development
+    authenticated = true;
     userMetadata: UserMetadata | null = null;
-    isAuthEnabled = false; // Set to false for local development
+    isAuthEnabled = false;
 
     constructor() {
         makeAutoObservable(this);
         this.fetchUserMetadata();
-        this.listenForAuthEvents();
     }
 
     async fetchUserMetadata() {
-        this.userMetadata = (await invokeMainChannel(
-            MainChannels.GET_USER_METADATA,
-        )) as UserMetadata;
-
-        const signedIn = (await invokeMainChannel(MainChannels.IS_USER_SIGNED_IN)) as boolean;
-
-        if (this.userMetadata && signedIn) {
-            this.authenticated = true;
-        }
-    }
-
-    listenForAuthEvents() {
-        window.api.on(MainChannels.USER_SIGNED_IN, async (e, args) => {
-            this.authenticated = true;
-            this.fetchUserMetadata();
-        });
-
-        window.api.on(MainChannels.USER_SIGNED_OUT, async (e, args) => {
-            this.authenticated = false;
-            this.userMetadata = null;
-        });
+        this.userMetadata = {
+            id: 'local-user',
+            email: 'local@example.com',
+            name: 'Local User',
+        };
+        this.authenticated = true;
     }
 
     async signIn(provider: 'github' | 'google') {
-        await invokeMainChannel(MainChannels.SIGN_IN, { provider });
+        console.log('Auth is disabled');
     }
 
     async signOut() {
-        await invokeMainChannel(MainChannels.SIGN_OUT);
+        console.log('Auth is disabled');
     }
 }
