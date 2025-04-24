@@ -26,29 +26,17 @@ async function getAnthropicProvider(
     payload: OnlookPayload,
 ): Promise<LanguageModelV1> {
     const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
-    const proxyUrl = `${import.meta.env.VITE_SUPABASE_API_URL}${FUNCTIONS_ROUTE}${BASE_PROXY_ROUTE}${ProxyRoutes.ANTHROPIC}`;
 
-    const config: {
-        apiKey?: string;
-        baseURL?: string;
-        headers?: Record<string, string>;
-    } = {};
-
-    if (apiKey) {
-        config.apiKey = apiKey;
-    } else {
-        const authTokens = await getRefreshedAuthTokens();
-        if (!authTokens) {
-            throw new Error('No auth tokens found');
-        }
-        config.apiKey = '';
-        config.baseURL = proxyUrl;
-        config.headers = {
-            Authorization: `Bearer ${authTokens.accessToken}`,
-            'X-Onlook-Request-Type': payload.requestType,
-            'anthropic-beta': 'output-128k-2025-02-19',
-        };
+    if (!apiKey) {
+        throw new Error('No Anthropic API key found in environment variables');
     }
+
+    const config = {
+        apiKey: apiKey,
+        headers: {
+            'anthropic-beta': 'output-128k-2025-02-19',
+        },
+    };
 
     const anthropic = createAnthropic(config);
     return anthropic(model, {

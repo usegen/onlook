@@ -1,13 +1,19 @@
 import { MainChannels } from '@onlook/models/constants';
 import { RunState } from '@onlook/models/run';
-import * as pty from 'node-pty';
 import os from 'os';
 import { mainWindow } from '..';
 import { getBunCommand } from '../bun';
 
+interface MockPty {
+    onData: (callback: (data: string) => void) => void;
+    write: (data: string) => void;
+    resize: (cols: number, rows: number) => void;
+    kill: () => void;
+}
+
 class TerminalManager {
     private static instance: TerminalManager;
-    private processes: Map<string, pty.IPty>;
+    private processes: Map<string, MockPty>;
     private outputHistory: Map<string, string>;
 
     private constructor() {
@@ -24,18 +30,23 @@ class TerminalManager {
 
     create(id: string, options?: { cwd?: string }): boolean {
         try {
-            const shell = os.platform() === 'win32' ? 'powershell.exe' : '/bin/sh';
-            const ptyProcess = pty.spawn(shell, [], {
-                name: 'xterm-color',
-                cwd: options?.cwd,
-            });
+            const mockPty: MockPty = {
+                onData: (callback) => {
+                    // Mock implementation
+                },
+                write: (data) => {
+                    console.log(`Terminal ${id} received:`, data);
+                    this.addTerminalMessage(id, data);
+                },
+                resize: (cols, rows) => {
+                    console.log(`Terminal ${id} resized to:`, cols, 'x', rows);
+                },
+                kill: () => {
+                    console.log(`Terminal ${id} killed`);
+                },
+            };
 
-            ptyProcess.onData((data: string) => {
-                this.checkTerminalState(data);
-                this.addTerminalMessage(id, data);
-            });
-
-            this.processes.set(id, ptyProcess);
+            this.processes.set(id, mockPty);
             return true;
         } catch (error) {
             console.error('Failed to create terminal.', error);

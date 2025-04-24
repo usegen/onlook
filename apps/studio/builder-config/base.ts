@@ -10,13 +10,6 @@ const config: Configuration = {
         output: 'release/${version}',
     },
     files: ['dist-electron', 'dist'],
-    extraResources: [
-        {
-            from: 'resources/bun',
-            to: 'bun',
-            filter: ['**/*'],
-        },
-    ],
     mac: {
         artifactName: '${productName}-${arch}.${ext}',
         category: 'public.app-category.developer-tools',
