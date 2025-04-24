@@ -5,9 +5,9 @@ import { makeAutoObservable } from 'mobx';
 import { invokeMainChannel } from '../utils';
 
 export class AuthManager {
-    authenticated = false;
+    authenticated = true; // Set to true for local development
     userMetadata: UserMetadata | null = null;
-    isAuthEnabled = !!supabase && !!supabase.auth;
+    isAuthEnabled = false; // Set to false for local development
 
     constructor() {
         makeAutoObservable(this);
