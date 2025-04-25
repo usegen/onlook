@@ -9,11 +9,11 @@
 
 ### Windows
 ```powershell
-# Using WSL2
-wsl -d your-distro-name bash -c "./run_podman.sh"
-
-# Or using PowerShell (if using Podman Desktop)
+# Option 1: Using PowerShell with Podman Desktop (Recommended)
 .\run_podman.ps1
+
+# Option 2: Using WSL2
+wsl -d your-distro-name bash -c "./run_podman.sh"
 ```
 
 ## Stop Onlook
@@ -27,11 +27,11 @@ podman stop -a
 
 ### Windows
 ```powershell
+# Using PowerShell
+podman stop onlook
+
 # Using WSL2
 wsl -d your-distro-name bash -c "podman stop onlook"
-
-# Or using PowerShell (if using Podman Desktop)
-podman stop onlook
 ```
 
 ---
@@ -55,6 +55,7 @@ This guide explains how to run Onlook in Podman containers, including the Supaba
 1. Download and install Podman Desktop from [podman-desktop.io](https://podman-desktop.io/downloads)
 2. During installation, it will guide you through setting up WSL2 if not already installed
 3. Follow the setup wizard to complete the installation
+4. **Important**: Install an X server for Windows like [VcXsrv](https://sourceforge.net/projects/vcxsrv/) or [Xming](https://sourceforge.net/projects/xming/) for GUI support
 
 #### Option 2: WSL2 + Podman
 
@@ -148,13 +149,17 @@ xhost +local:
    - Native OpenGL disabled
    - Allow connections from network clients
 
-3. In WSL2, add these lines to your .bashrc:
+3. When using the PowerShell script:
+   - The script automatically sets `DISPLAY=host.docker.internal:0.0`
+   - Make sure your X server is running before starting the container
+
+4. When using WSL2, add these lines to your .bashrc:
 ```bash
 export DISPLAY=$(ip route | grep default | awk '{print $3}'):0
 export LIBGL_ALWAYS_INDIRECT=1
 ```
 
-4. Restart your WSL2 terminal or run:
+5. Restart your WSL2 terminal or run:
 ```bash
 source ~/.bashrc
 ```
@@ -179,6 +184,11 @@ The application is configured through environment variables in the podman-compos
 You can modify these settings by editing the podman-compose.yml file.
 
 ### Windows-Specific Configuration
+
+For Windows with Podman Desktop, the included PowerShell script (run_podman.ps1) automatically:
+- Sets the correct DISPLAY environment variable
+- Configures paths for Windows compatibility
+- Manages the build and run process
 
 When running on Windows with WSL2, you may need to modify the run_podman.sh script to set the correct DISPLAY environment variable:
 
