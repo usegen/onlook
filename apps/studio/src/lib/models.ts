@@ -27,6 +27,7 @@ export enum SettingsTabValue {
     VERSIONS = 'versions',
     ADVANCED = 'advanced',
     SITE = 'site',
+    API_KEYS = 'api-keys',
 }
 
 export enum LayersPanelTabValue {

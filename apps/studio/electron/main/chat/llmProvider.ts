@@ -5,6 +5,7 @@ import { BASE_PROXY_ROUTE, FUNCTIONS_ROUTE, ProxyRoutes } from '@onlook/models/c
 import { AZURE_OPENAI_MODELS, CLAUDE_MODELS, LLMProvider } from '@onlook/models/llm';
 import { type LanguageModelV1 } from 'ai';
 import { getRefreshedAuthTokens } from '../auth';
+import { PersistentStorage } from '../storage';
 
 export interface OnlookPayload {
     requestType: StreamRequestType;
@@ -26,12 +27,13 @@ export async function initModel(
 }
 
 async function getAzureOpenAIProvider(model: AZURE_OPENAI_MODELS): Promise<LanguageModelV1> {
-    const apiKey = import.meta.env.VITE_AZURE_OPENAI_API_KEY;
-    const endpoint = import.meta.env.VITE_AZURE_OPENAI_ENDPOINT;
-    const deployment = import.meta.env.VITE_AZURE_OPENAI_DEPLOYMENT;
+    const userSettings = PersistentStorage.USER_SETTINGS.read() || {};
+    const apiKey = userSettings.apiKeys?.azureOpenAI?.apiKey;
+    const endpoint = userSettings.apiKeys?.azureOpenAI?.endpoint;
+    const deployment = userSettings.apiKeys?.azureOpenAI?.deployment;
 
     if (!apiKey || !endpoint || !deployment) {
-        throw new Error('Azure OpenAI configuration missing');
+        throw new Error('Azure OpenAI configuration missing from user settings');
     }
 
     const config = {
@@ -49,10 +51,11 @@ async function getAnthropicProvider(
     model: CLAUDE_MODELS,
     payload: OnlookPayload,
 ): Promise<LanguageModelV1> {
-    const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+    const userSettings = PersistentStorage.USER_SETTINGS.read() || {};
+    const apiKey = userSettings.apiKeys?.anthropic;
 
     if (!apiKey) {
-        throw new Error('No Anthropic API key found in environment variables');
+        throw new Error('No Anthropic API key found in user settings');
     }
 
     const config = {

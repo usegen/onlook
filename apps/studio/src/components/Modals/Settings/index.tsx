@@ -16,6 +16,7 @@ import ProjectTab from './Project';
 import { SiteTab } from './Site';
 import { PageTab } from './Site/Page';
 import { VersionsTab } from './Versions';
+import ApiKeysTab from './ApiKeys';
 import { capitalizeFirstLetter } from '/common/helpers';
 
 interface SettingTab {
@@ -78,12 +79,17 @@ export const SettingsModal = observer(() => {
     const globalTabs: SettingTab[] = [
         {
             label: SettingsTabValue.PREFERENCES,
-            icon: <Icons.Person className="mr-2 h-4 w-4" />,
+            icon: <Icons.Gear className="mr-2 h-4 w-4" />,
             component: <PreferencesTab />,
         },
         {
+            label: 'api-keys',
+            icon: <Icons.LockClosed className="mr-2 h-4 w-4" />,
+            component: <ApiKeysTab />,
+        },
+        {
             label: SettingsTabValue.ADVANCED,
-            icon: <Icons.MixerVertical className="mr-2 h-4 w-4" />,
+            icon: <Icons.Terminal className="mr-2 h-4 w-4" />,
             component: <AdvancedTab />,
         },
     ];

@@ -7,6 +7,7 @@ export interface UserSettings {
     signInMethod?: string;
     editor?: EditorSettings;
     chat?: ChatSettings;
+    apiKeys?: ApiKeySettings;
 }
 
 export interface EditorSettings {
@@ -47,4 +48,17 @@ export interface AuthTokens {
 
 export interface AppState {
     activeProjectId: string | null;
+}
+
+export interface ApiKeySettings {
+    anthropic?: string;
+    azureOpenAI?: {
+        apiKey: string;
+        endpoint: string;
+        deployment: string;
+    };
+    openAI?: {
+        apiKey: string;
+        organization: string;
+    };
 }
