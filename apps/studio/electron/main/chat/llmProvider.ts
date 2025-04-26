@@ -32,8 +32,19 @@ async function getAzureOpenAIProvider(model: AZURE_OPENAI_MODELS): Promise<Langu
     const targetUri = userSettings.apiKeys?.azureOpenAI?.targetUri;
 
     if (!apiKey || !targetUri) {
+        console.error('Azure OpenAI configuration missing:', {
+            hasApiKey: !!apiKey,
+            hasTargetUri: !!targetUri,
+            settings: userSettings.apiKeys?.azureOpenAI,
+        });
         throw new Error('Azure OpenAI configuration missing from user settings');
     }
+
+    console.log('Azure OpenAI Configuration:', {
+        model,
+        targetUri,
+        hasApiKey: !!apiKey,
+    });
 
     const config = {
         apiKey,
@@ -43,7 +54,46 @@ async function getAzureOpenAIProvider(model: AZURE_OPENAI_MODELS): Promise<Langu
         },
     };
 
-    return createAzure(config)(model, {});
+    try {
+        const provider = createAzure(config)(model, {});
+        // Test the connection
+        const testResponse = await fetch(targetUri, {
+            method: 'GET',
+            headers: {
+                'api-key': apiKey,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        console.log('Azure OpenAI Connection Test:', {
+            status: testResponse.status,
+            statusText: testResponse.statusText,
+            headers: Object.fromEntries(testResponse.headers.entries()),
+        });
+
+        if (!testResponse.ok) {
+            const errorText = await testResponse.text();
+            console.error('Azure OpenAI Connection Error:', {
+                status: testResponse.status,
+                statusText: testResponse.statusText,
+                error: errorText,
+            });
+            throw new Error(
+                `Azure OpenAI connection failed: ${testResponse.status} ${testResponse.statusText}`,
+            );
+        }
+
+        return provider;
+    } catch (error) {
+        console.error('Azure OpenAI Provider Creation Error:', {
+            error,
+            config: {
+                ...config,
+                apiKey: '[REDACTED]',
+            },
+        });
+        throw error;
+    }
 }
 
 async function getAnthropicProvider(
