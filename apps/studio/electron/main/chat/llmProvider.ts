@@ -40,30 +40,43 @@ async function getAzureOpenAIProvider(model: AZURE_OPENAI_MODELS): Promise<Langu
         throw new Error('Azure OpenAI configuration missing from user settings');
     }
 
+    // Parse the target URI to extract the base URL and API version
+    const url = new URL(targetUri);
+    const baseUrl = `${url.protocol}//${url.host}`;
+    const apiVersion = url.searchParams.get('api-version') || '2024-02-15-preview';
+
     console.log('Azure OpenAI Configuration:', {
         model,
-        targetUri,
+        baseUrl,
+        apiVersion,
         hasApiKey: !!apiKey,
     });
 
     const config = {
         apiKey,
-        baseURL: targetUri,
+        baseURL: baseUrl,
         headers: {
             'api-key': apiKey,
+        },
+        params: {
+            'api-version': apiVersion,
         },
     };
 
     try {
         const provider = createAzure(config)(model, {});
-        // Test the connection
-        const testResponse = await fetch(targetUri, {
-            method: 'GET',
-            headers: {
-                'api-key': apiKey,
-                'Content-Type': 'application/json',
+
+        // Test the connection with a simple request
+        const testResponse = await fetch(
+            `${baseUrl}/openai/deployments/${model}/chat/completions?api-version=${apiVersion}`,
+            {
+                method: 'GET',
+                headers: {
+                    'api-key': apiKey,
+                    'Content-Type': 'application/json',
+                },
             },
-        });
+        );
 
         console.log('Azure OpenAI Connection Test:', {
             status: testResponse.status,

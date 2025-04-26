@@ -9,6 +9,6 @@ export enum CLAUDE_MODELS {
 }
 
 export enum AZURE_OPENAI_MODELS {
-    GPT4 = 'gpt-4',
-    GPT35 = 'gpt-3.5-turbo',
+    GPT4 = 'gpt-40',
+    GPT35 = 'gpt-35-turbo-deployment',
 }
