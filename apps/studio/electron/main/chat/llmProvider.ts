@@ -29,16 +29,15 @@ export async function initModel(
 async function getAzureOpenAIProvider(model: AZURE_OPENAI_MODELS): Promise<LanguageModelV1> {
     const userSettings = PersistentStorage.USER_SETTINGS.read() || {};
     const apiKey = userSettings.apiKeys?.azureOpenAI?.apiKey;
-    const endpoint = userSettings.apiKeys?.azureOpenAI?.endpoint;
-    const deployment = userSettings.apiKeys?.azureOpenAI?.deployment;
+    const targetUri = userSettings.apiKeys?.azureOpenAI?.targetUri;
 
-    if (!apiKey || !endpoint || !deployment) {
+    if (!apiKey || !targetUri) {
         throw new Error('Azure OpenAI configuration missing from user settings');
     }
 
     const config = {
         apiKey,
-        baseURL: endpoint,
+        baseURL: targetUri,
         headers: {
             'api-key': apiKey,
         },

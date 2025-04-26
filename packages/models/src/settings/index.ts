@@ -54,8 +54,7 @@ export interface ApiKeySettings {
     anthropic?: string;
     azureOpenAI?: {
         apiKey: string;
-        endpoint: string;
-        deployment: string;
+        targetUri: string;
     };
     openAI?: {
         apiKey: string;
